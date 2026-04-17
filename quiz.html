@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KinkMaster - Diagnóstico</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                50: '#fdf2f8', 100: '#fce7f3', 200: '#fbcfe8', 300: '#f9a8d4',
+                400: '#f472b6', 500: '#ec4899', 600: '#db2777', 700: '#be185d',
+                800: '#9d174d', 900: '#831843', 950: '#500724',
+              },
+              zinc: {
+                850: '#202023',
+                900: '#18181b',
+                950: '#09090b',
+              }
+            },
+            fontFamily: {
+              sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+            },
+            animation: {
+                'fade-in': 'fadeIn 0.5s ease-out forwards',
+                'slide-up': 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                'scale-tap': 'scaleTap 0.2s ease-in-out',
+            },
+            keyframes: {
+                fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                slideUp: { '0%': { transform: 'translateY(15px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
+                scaleTap: { '0%': { transform: 'scale(1)' }, '50%': { transform: 'scale(0.98)' }, '100%': { transform: 'scale(1)' } }
+            },
+            boxShadow: {
+                'glow': '0 0 20px -5px rgba(236, 72, 153, 0.3)',
+                'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+            }
+          },
+        },
+      }
+    </script>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+      body { 
+          font-family: 'Inter', sans-serif; 
+          background-color: #000000; 
+          color: #f4f4f5;
+          -webkit-font-smoothing: antialiased;
+      }
+      
+      /* Hide Scrollbar */
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      
+      /* Transition Utility */
+      .step-enter { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    </style>
+</head>
+<body class="h-screen w-screen flex items-center justify-center bg-black sm:bg-zinc-950/50 sm:p-4 overflow-hidden">
+
+    <!-- App Container (Card Style on Desktop) -->
+    <div id="app-card" class="w-full h-full sm:h-[85vh] sm:max-h-[800px] sm:max-w-[400px] sm:rounded-[2rem] bg-zinc-950 sm:border sm:border-white/10 shadow-2xl relative flex flex-col overflow-hidden">
+        
+        <!-- Header Fixo (Progress Bar) -->
+        <div class="h-1 w-full bg-zinc-900 shrink-0">
+            <div id="progress-bar" class="h-full bg-white transition-all duration-500 ease-out" style="width: 0%"></div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div id="app-content" class="flex-1 relative flex flex-col h-full overflow-hidden">
+            <!-- Content Injected via JS -->
+        </div>
+
+    </div>
+
+    <script>
+        // --- DADOS ---
+        const BASE_TICTO_URL = "https://checkout.ticto.com.br"; // Substitua pelos links reais
+
+        const FETISH_DATA = [
+            { id: 'anal', title: 'Sexo Anal', color: 'from-red-600 to-rose-900', products: { Homens: { introTitle: 'Prazer Anal Proibido', introDesc: 'Desperte o fogo secreto do prazer anal profundo.', checkoutUrl: '#' }, Mulheres: { introTitle: 'Anal Feminino', introDesc: 'Técnicas de relaxamento e prazer.', checkoutUrl: '#' }, 'LGBT+': { introTitle: 'Anal Queer', introDesc: 'Guia inclusivo sobre saúde e prazer.', checkoutUrl: '#' } } },
+            { id: 'podolatria', title: 'Podolatria', color: 'from-orange-500 to-amber-700', products: { Homens: { introTitle: 'Adoração Proibida', introDesc: 'Renda-se à adoração podal proibida.', checkoutUrl: '#' }, Mulheres: { introTitle: 'Poder nos Pés', introDesc: 'Como receber adoração e cuidar da estética.', checkoutUrl: '#' }, 'LGBT+': { introTitle: 'Exploração Sensorial', introDesc: 'Toque e adoração sem gênero.', checkoutUrl: '#' } } },
+            { id: 'orgia', title: 'Orgia / Grupo', color: 'from-purple-600 to-indigo-800', products: { Homens: { introTitle: 'Gang Bang Proibido', introDesc: 'Renda-se ao gang bang que desperta desejos.', checkoutUrl: '#' }, Mulheres: { introTitle: 'A Mulher no Centro', introDesc: 'Segurança e prazer com múltiplos parceiros.', checkoutUrl: '#' }, 'LGBT+': { introTitle: 'Festas Queer', introDesc: 'Navegando espaços seguros e códigos.', checkoutUrl: '#' } } },
+            { id: 'cuckold', title: 'Cuckold', color: 'from-green-600 to-emerald-900', products: { Homens: { introTitle: 'Cuckold Proibido', introDesc: 'Prazeres que acendem ciúme excitante.', checkoutUrl: '#' }, Mulheres: { introTitle: 'Guia Hotwife', introDesc: 'Como explorar com segurança e ética.', checkoutUrl: '#' }, 'LGBT+': { introTitle: 'Cuckold Fluido', introDesc: 'Dinâmicas para casais diversos.', checkoutUrl: '#' } } },
+            { id: 'bdsm', title: 'Dominação / Sub', color: 'from-gray-700 to-black', products: { Homens: { introTitle: 'Submissão em Êxtase', introDesc: 'Alcance êxtase na submissão intensa.', checkoutUrl: '#' }, Mulheres: { introTitle: 'Desperte a Dominatrix', introDesc: 'Postura, voz de comando e poder.', checkoutUrl: '#' }, 'LGBT+': { introTitle: 'Kink Queer', introDesc: 'Papéis fluidos e negociação.', checkoutUrl: '#' } } }
+        ];
+
+        const CATEGORY_MAP = { 'anal': 'anal', 'bdsm': 'bdsm', 'orgia': 'orgia', 'podolatria': 'podolatria', 'cuckold': 'cuckold' };
+
+        // FLUXO EXPANDIDO
+        const STEPS = [
+            // P1
+            {
+                id: 1, type: 'question', title: 'O que acende a faísca?', subtitle: 'Selecione o que gera desejo imediato.', allowMultiple: true,
+                options: [
+                    { label: "O proibido, invasivo ou 'sujo'.", weights: { anal: 3 } },
+                    { label: "Jogos de poder e controle.", weights: { bdsm: 3 } },
+                    { label: "Ver meu parceiro(a) com outro.", weights: { cuckold: 3 } },
+                    { label: "Adoração de partes específicas.", weights: { podolatria: 3, bdsm: 1 } },
+                    { label: "A energia de várias pessoas.", weights: { orgia: 3 } },
+                ]
+            },
+            // P2 (NOVA) - Foco Sensorial
+            {
+                id: 2, type: 'question', title: 'Qual seu estímulo favorito?', subtitle: 'Como seu corpo reage melhor.', allowMultiple: false,
+                options: [
+                    { label: "Visual (Ver tudo acontecer)", weights: { cuckold: 2, orgia: 1 } },
+                    { label: "Físico Intenso (Dor/Pressão)", weights: { bdsm: 2, anal: 1 } },
+                    { label: "Mental (Humilhação/Tabu)", weights: { bdsm: 1, cuckold: 2 } },
+                    { label: "Tátil Suave (Toque/Textura)", weights: { podolatria: 3 } }
+                ]
+            },
+            // P3
+            {
+                id: 3, type: 'question', title: 'Qual seu papel ideal?', subtitle: 'Siga seu instinto.', allowMultiple: true,
+                options: [
+                    { label: "Centro das Atenções.", weights: { orgia: 3, cuckold: 1 } },
+                    { label: "Adorador Devoto.", weights: { podolatria: 3, bdsm: 1 } },
+                    { label: "Controlador ou Submisso.", weights: { bdsm: 3 } },
+                    { label: "Observador.", weights: { cuckold: 3 } },
+                    { label: "Explorador de Limites.", weights: { anal: 3 } },
+                ]
+            },
+            // P4 (NOVA) - Atmosfera
+            {
+                id: 4, type: 'question', title: 'Qual a atmosfera perfeita?', subtitle: 'Onde a mágica acontece.', allowMultiple: false,
+                options: [
+                    { label: "Privada, tensa e silenciosa.", weights: { bdsm: 2, anal: 1 } },
+                    { label: "Caótica, barulhenta e cheia.", weights: { orgia: 3 } },
+                    { label: "Romântica mas com um 'twist' proibido.", weights: { cuckold: 1, podolatria: 1 } }
+                ]
+            },
+            // P5 (NOVA) - Pós-Ato
+            {
+                id: 5, type: 'question', title: 'Como você quer se sentir depois?', subtitle: 'O aftercare emocional.', allowMultiple: false,
+                options: [
+                    { label: "Esgotado(a) e usado(a).", weights: { orgia: 1, bdsm: 2 } },
+                    { label: "Conectado(a) profundamente.", weights: { anal: 2 } },
+                    { label: "Com a adrenalina do risco.", weights: { cuckold: 2 } }
+                ]
+            },
+            // P6 - Bloqueio
+            {
+                id: 6, type: 'question', title: 'O que te impede hoje?', subtitle: 'Seja honesto.', allowMultiple: false,
+                options: [
+                    { label: "Medo do julgamento.", weights: { bdsm: 1, cuckold: 1 } },
+                    { label: "Não sei a técnica.", weights: { anal: 2 } },
+                    { label: "Falta de parceiros.", weights: { orgia: 2 } },
+                    { label: "Parece 'estranho'.", weights: { podolatria: 2 } },
+                ]
+            },
+            // P7 - Demográfico
+            {
+                id: 7, type: 'question', title: 'Para finalizar:', subtitle: 'Como você se identifica?', allowMultiple: false,
+                options: [
+                    { label: "Homem", value: 'Homens' },
+                    { label: "Mulher", value: 'Mulheres' },
+                    { label: "LGBT+ / Queer", value: 'LGBT+' },
+                ]
+            },
+            { id: 8, type: 'calculating' },
+            // Bridge 1
+            {
+                id: 9, type: 'bridge', title: 'A Verdade',
+                content: `<p class="mb-4 text-lg text-zinc-300">90% da frustração vem de tentar adivinhar o que fazer.</p><p class="text-white font-medium">O bloqueio não é você. É a falta de método.</p>`
+            },
+            // Bridge 2
+            {
+                id: 10, type: 'bridge', title: 'A Solução',
+                content: `<p class="mb-4 text-zinc-300">Seu subconsciente pede para explorar, mas seu lógico trava.</p><p class="text-white font-medium">Mapeamos seu DNA Erótico e criamos o plano exato.</p>`
+            },
+            { id: 11, type: 'result' }
+        ];
+
+        // --- STATE ---
+        let state = { stepIndex: 0, selectedIndices: [], scores: { anal: 0, bdsm: 0, orgia: 0, podolatria: 0, cuckold: 0 }, audience: 'Homens', finalResult: null };
+
+        // --- LOGIC ---
+        function getMethodName(cat) {
+            const map = { 'anal': 'Relaxamento Progressivo', 'bdsm': 'Protocolo RACK', 'orgia': 'Gestão de Energia', 'podolatria': 'Adoração Sensorial', 'cuckold': 'Ressignificação do Ciúme' };
+            return map[cat] || 'Método KinkMaster';
+        }
+
+        function calculateFinalResult() {
+            const total = Object.values(state.scores).reduce((a, b) => a + b, 0) || 1;
+            const results = Object.entries(state.scores).map(([c, v]) => ({ category: c, percent: Math.round((v / total) * 100) })).sort((a, b) => b.percent - a.percent);
+            const winner = results[0];
+            const data = FETISH_DATA.find(f => f.id === CATEGORY_MAP[winner.category]) || FETISH_DATA[0];
+            state.finalResult = { dominant: winner.category, percentages: results, fetishData: data };
+            nextStep();
+        }
+
+        function nextStep(override) {
+            const stepData = STEPS[state.stepIndex];
+            const indices = override || state.selectedIndices;
+
+            // Process Scores
+            if (stepData.options) {
+                indices.forEach(idx => {
+                    const opt = stepData.options[idx];
+                    if (opt.weights) for (const [k, v] of Object.entries(opt.weights)) state.scores[k] = (state.scores[k] || 0) + v;
+                    if (opt.value) state.audience = opt.value;
+                });
+            }
+            
+            state.selectedIndices = [];
+            state.stepIndex++;
+
+            if (STEPS[state.stepIndex]?.type === 'calculating') {
+                render();
+                setTimeout(() => calculateFinalResult(), 2200);
+            } else {
+                render();
+            }
+        }
+
+        // Fixed: Added delay for single selection to prevent visual glitch
+        function handleOptionClick(index) {
+            const stepData = STEPS[state.stepIndex];
+            
+            if (stepData.allowMultiple) {
+                // Toggle Logic for Multi-select
+                const btn = document.getElementById(`opt-${index}`);
+                const isSelected = state.selectedIndices.includes(index);
+                
+                if (isSelected) {
+                    state.selectedIndices = state.selectedIndices.filter(i => i !== index);
+                    // Update UI immediately without full re-render
+                    btn.classList.remove('bg-white', 'text-black', 'scale-[0.98]');
+                    btn.classList.add('bg-zinc-900', 'text-zinc-300', 'border-white/5');
+                    const icon = btn.querySelector('.check-icon');
+                    if(icon) icon.remove();
+                } else {
+                    state.selectedIndices.push(index);
+                    // Update UI immediately
+                    btn.classList.remove('bg-zinc-900', 'text-zinc-300', 'border-white/5');
+                    btn.classList.add('bg-white', 'text-black', 'scale-[0.98]');
+                    if(!btn.querySelector('.check-icon')) {
+                        btn.insertAdjacentHTML('beforeend', '<i data-lucide="check" class="check-icon w-5 h-5 animate-fade-in"></i>');
+                        lucide.createIcons();
+                    }
+                }
+                
+                // Update Continue Button State
+                const continueBtn = document.getElementById('continue-btn');
+                if(continueBtn) {
+                    if(state.selectedIndices.length > 0) {
+                        continueBtn.disabled = false;
+                        continueBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    } else {
+                        continueBtn.disabled = true;
+                        continueBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    }
+                }
+
+            } else {
+                // Single Select Logic with Delay
+                const btn = document.getElementById(`opt-${index}`);
+                // Add active state styles
+                btn.classList.remove('bg-zinc-900', 'text-zinc-300');
+                btn.classList.add('bg-white', 'text-black', 'scale-[0.98]');
+                
+                // Small delay to show feedback before moving
+                setTimeout(() => {
+                    nextStep([index]);
+                }, 350);
+            }
+        }
+
+        // --- RENDERERS ---
+
+        function updateProgressBar() {
+            const progress = ((state.stepIndex + 1) / STEPS.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+        }
+
+        function renderCalculating() {
+            return `
+                <div class="flex-1 flex flex-col items-center justify-center p-8 text-center animate-fade-in">
+                    <div class="w-16 h-16 mb-8 relative">
+                        <div class="absolute inset-0 border-4 border-zinc-800 rounded-full"></div>
+                        <div class="absolute inset-0 border-4 border-t-brand-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+                    </div>
+                    <h2 class="text-xl font-medium text-white mb-2 tracking-tight">Analisando Perfil</h2>
+                    <p class="text-sm text-zinc-500 animate-pulse">Cruzando 5 pontos de dados...</p>
+                </div>
+            `;
+        }
+
+        function renderBridge(step) {
+            return `
+                <div class="flex-1 flex flex-col p-8 overflow-y-auto no-scrollbar step-enter">
+                    <div class="my-auto">
+                        <h2 class="text-3xl font-bold text-white mb-6 tracking-tight leading-tight">${step.title}</h2>
+                        <div class="text-lg leading-relaxed space-y-4 mb-10 opacity-90 font-light">
+                            ${step.content}
+                        </div>
+                        <button onclick="nextStep()" class="w-full py-4 bg-white text-black rounded-2xl font-semibold text-lg hover:bg-zinc-200 transition-colors shadow-lg shadow-white/10 active:scale-95 transform duration-100">
+                            Continuar
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderQuestion(step) {
+            const optionsHtml = step.options.map((opt, idx) => {
+                // Check selection for initial render (mostly for multi select re-renders if needed, though we handle via DOM mostly)
+                const isSelected = state.selectedIndices.includes(idx);
+                
+                return `
+                    <button 
+                        id="opt-${idx}"
+                        onclick="handleOptionClick(${idx})" 
+                        class="w-full text-left p-5 rounded-2xl transition-all duration-200 mb-3 flex items-center justify-between group active:scale-[0.98] border ${isSelected ? 'bg-white text-black border-transparent scale-[0.98]' : 'bg-zinc-900 text-zinc-300 border-white/5 hover:bg-zinc-800'}"
+                    >
+                        <span class="font-medium text-[15px] tracking-tight">${opt.label}</span>
+                        ${isSelected ? '<i data-lucide="check" class="check-icon w-5 h-5"></i>' : ''}
+                    </button>
+                `;
+            }).join('');
+
+            return `
+                <div class="flex-1 flex flex-col p-6 overflow-hidden step-enter">
+                    <div class="flex-1 overflow-y-auto no-scrollbar pb-24">
+                        <div class="mt-4 mb-8">
+                            <h2 class="text-3xl font-bold text-white mb-2 tracking-tight leading-tight">${step.title}</h2>
+                            ${step.subtitle ? `<p class="text-zinc-500 text-lg font-medium">${step.subtitle}</p>` : ''}
+                        </div>
+                        <div class="space-y-1">
+                            ${optionsHtml}
+                        </div>
+                    </div>
+                    ${step.allowMultiple ? `
+                        <div class="pt-4 border-t border-white/5 bg-zinc-950 absolute bottom-0 left-0 right-0 p-6 z-20 backdrop-blur-xl bg-opacity-90">
+                            <button 
+                                id="continue-btn"
+                                onclick="nextStep()" 
+                                disabled
+                                class="w-full py-4 bg-white text-black rounded-2xl font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-zinc-200 transition-colors"
+                            >
+                                Continuar
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function renderResult() {
+            const { dominant, percentages, fetishData } = state.finalResult;
+            const product = fetishData.products[state.audience] || fetishData.products['Homens'];
+
+            return `
+                <div class="flex-1 flex flex-col h-full bg-zinc-950 overflow-hidden animate-fade-in relative">
+                    <!-- Top Gradient for Ambience -->
+                    <div class="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-brand-900/20 to-transparent pointer-events-none"></div>
+
+                    <div class="flex-1 overflow-y-auto no-scrollbar p-6 relative z-10 pb-24">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 backdrop-blur border border-white/10 text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-6">
+                            <i data-lucide="sparkles" class="w-3 h-3 text-brand-400"></i> Diagnóstico Completo
+                        </div>
+
+                        <h1 class="text-4xl font-bold text-white mb-2 tracking-tight">Seu Arquétipo:<br><span class="text-brand-500">${fetishData.title}</span></h1>
+                        <p class="text-zinc-400 text-base leading-relaxed mb-8 font-light">
+                            Suas escolhas indicam um desejo profundo por <strong>${dominant}</strong>. Você não busca apenas prazer, mas intensidade e conexão através da técnica.
+                        </p>
+
+                        <!-- Stats Card Minimalist -->
+                        <div class="bg-zinc-900 rounded-[24px] p-6 mb-8 border border-white/5">
+                            <div class="flex justify-between items-end mb-4">
+                                <span class="text-xs font-bold uppercase tracking-wider text-zinc-500">Compatibilidade</span>
+                                <span class="text-4xl font-bold text-white tracking-tighter">${percentages[0].percent}%</span>
+                            </div>
+                            <div class="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+                                <div class="h-full bg-white" style="width: ${percentages[0].percent}%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Product Card (Apple Wallet Style) -->
+                        <div onclick="window.location.href='${product.checkoutUrl}'" class="relative w-full aspect-[4/5] bg-zinc-900 rounded-[32px] overflow-hidden border border-white/10 shadow-2xl flex flex-col justify-between p-8 group cursor-pointer hover:scale-[1.02] transition-transform duration-500 ease-out">
+                            <!-- Image/Gradient BG -->
+                            <div class="absolute inset-0 bg-gradient-to-br ${fetishData.color} opacity-20 group-hover:opacity-30 transition-opacity duration-500"></div>
+                            
+                            <div class="relative z-10">
+                                <div class="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-2">Recomendação Oficial</div>
+                                <h3 class="text-3xl font-bold text-white leading-none mb-3 tracking-tight">${product.introTitle}</h3>
+                                <p class="text-sm text-white/70 line-clamp-3 leading-relaxed font-light">${product.introDesc}</p>
+                            </div>
+
+                            <div class="relative z-10">
+                                <div class="flex items-end gap-3 mb-4">
+                                    <span class="text-3xl font-bold text-white">R$ 47</span>
+                                    <span class="text-sm text-white/40 line-through mb-1">R$ 97</span>
+                                </div>
+                                <button class="w-full py-4 bg-white text-black rounded-2xl font-bold text-base flex items-center justify-center gap-2 group-hover:bg-zinc-200 transition-colors">
+                                    Obter Guia <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8 text-center pb-8">
+                             <button onclick="location.reload()" class="text-xs text-zinc-600 hover:text-white transition-colors uppercase tracking-widest font-bold">Refazer teste</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function render() {
+            updateProgressBar();
+            
+            const step = STEPS[state.stepIndex];
+            const content = step.type === 'calculating' ? renderCalculating() :
+                            step.type === 'bridge' ? renderBridge(step) :
+                            step.type === 'result' ? renderResult() :
+                            renderQuestion(step);
+            
+            document.getElementById('app-content').innerHTML = content;
+            lucide.createIcons();
+            
+            // Scroll top fix
+            document.getElementById('app-content').scrollTop = 0;
+            
+            // Multi-select button state fix
+            if(step.allowMultiple) {
+                const continueBtn = document.getElementById('continue-btn');
+                if(continueBtn && state.selectedIndices.length === 0) {
+                     continueBtn.disabled = true;
+                     continueBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            }
+        }
+
+        // Initialize
+        render();
+
+    </script>
+</body>
+</html>
